@@ -17,6 +17,18 @@ from pysh.builtins import builtin_exit, builtin_pwd, builtin_cd
 from pysh.colors import BLUE, GREEN, RESET
 
 
+def build_command_dict(functions: list[str]) -> dict:
+    command_dict = {}
+    for f in functions:
+        command_name = f.__qualname__.strip("builtin_")
+        command_dict[command_name] = f
+    return command_dict
+
+
+command_dict = build_command_dict([builtin_exit, builtin_pwd, builtin_cd])
+print(command_dict)
+
+
 def prompt():
     """Return the shell prompt string showing the current directory."""
     cwd = os.getcwd()
@@ -49,12 +61,8 @@ def execute(command, args):
     """
 
     # TODO: Add your own built-in commands here
-    if command == "pwd":
-        builtin_pwd(args)
-    elif command == "exit":
-        builtin_exit(args)
-    elif command == "cd":
-        builtin_cd(args)
+    if command in command_dict.keys():
+        command_dict[command](args)
     else:
         # Run external commands as a child process.
         # subprocess.run will search for the command on the system PATH,
