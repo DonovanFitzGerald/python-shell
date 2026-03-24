@@ -19,7 +19,7 @@ import psutil
 # ---------------------------------------------------------------------------
 
 
-def builtin_pwd() -> None:
+def builtin_pwd(args) -> None:
     """
     Print the current working directory.
 
@@ -38,7 +38,7 @@ def builtin_pwd() -> None:
 # ---------------------------------------------------------------------------
 
 
-def builtin_exit() -> None:
+def builtin_exit(args) -> None:
     """
     Exit the shell.
 
@@ -71,6 +71,9 @@ def builtin_cd(args: list[str]) -> None:
 
 # - `procinfo <pid>`: use Python's `os` or `psutil` module to display information about a process: its status, memory usage, CPU time, and parent PID
 def builtin_procinfo(args: list[str]) -> None:
+    """
+    Displays information about a process: its status, memory usage, CPU time, and parent PID
+    """
     pid = int(args[0])
     try:
         proc = psutil.Process(pid)
@@ -93,6 +96,17 @@ def builtin_procinfo(args: list[str]) -> None:
 
 # TODO: Part 2:
 # - `cat <file> [file2 ...]`: read and display the contents of one or more files. Handle missing files with a clear error message.
+def builtin_cat(args: list[str]) -> None:
+    for arg in args:
+        path = arg
+        if os.path.isfile(path):
+            with open(path, "r") as f:
+                contents = f.read()
+                print(contents)
+        else:
+            print(f'pysh: "{path}" file not found')
+
+
 # - `head [-n N] <file>`: display the first _N_ lines of a file (default: 10)
 # - `wc <file> [file2 ...]`: count and display the number of lines, words, and characters in one or more files. Display totals when multiple files are given.
 
