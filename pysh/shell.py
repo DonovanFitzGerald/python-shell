@@ -90,6 +90,7 @@ def main():
 
     print()
     print("Welcome to pysh! Type 'help' to see available commands.\n")
+    print(f"Current process ID: {os.getpid()}")
 
     while True:
         try:
