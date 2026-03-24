@@ -108,6 +108,28 @@ def builtin_cat(args: list[str]) -> None:
 
 
 # - `head [-n N] <file>`: display the first _N_ lines of a file (default: 10)
+def builtin_head(args: list[str]) -> None:
+    """
+    Displays the first _N_ lines of a file
+    """
+    numLines = 10
+    for [index, string] in enumerate(args):
+        if string == "-n":
+            index
+            args.pop(index)
+            numLines = int(args[index])
+            args.pop(index)
+            break
+
+    path = args[0]
+    if os.path.isfile(path):
+        with open(path, "r") as f:
+            for _ in range(numLines):
+                print(f.readline())
+    else:
+        print(f'pysh: "{path}" file not found')
+
+
 # - `wc <file> [file2 ...]`: count and display the number of lines, words, and characters in one or more files. Display totals when multiple files are given.
 
 # TODO: Part 3:
