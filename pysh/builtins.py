@@ -55,6 +55,13 @@ def builtin_exit(args):
 
 # TODO: Part 1:
 # - `cd <path>`: change the current working directory
+
+
+def builtin_cd(args: list[str]) -> None:
+    path = args[0]
+    os.chdir(path)
+
+
 # - `pwd`: print the current working directory
 # - `echo <text>`: print text to the terminal
 # - `exit`: terminate the shell cleanly
