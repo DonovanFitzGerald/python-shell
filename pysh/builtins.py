@@ -12,12 +12,9 @@ Look at builtin_pwd below as a complete example to follow.
 import os
 import sys
 import psutil
-import threading
-import queue
 import time
-import requests
-import inspect
-
+import multiprocessing
+import subprocess
 
 # ---------------------------------------------------------------------------
 # Example built-in: pwd
@@ -167,6 +164,48 @@ def builtin_wc(args: list[str]) -> None:
 # - Top processes: display the top 10 processes sorted by memory or CPU usage. Use a `--sort` flag to specify the order (e.g. `sysinfo --sort cpu` or `sysinfo --sort memory`). Default to sorting by memory.
 # - Refreshing display: the output should refresh at a configurable interval (default: every 2 seconds).
 
+
+def builtin_sysinfo(args):
+    while True:
+        mem = psutil.virtual_memory()
+        # mem.total  # Total physical memory (bytes)
+        # mem.used  # Used memory (bytes)
+        # mem.available  # Available memory (bytes)
+        # mem.percent  # Percentage used
+
+        swap = psutil.swap_memory()
+        # swap.total  # Total swap (bytes)
+        # swap.used  # Used swap (bytes)
+        # swap.free  # Free swap (bytes)
+        # swap.percent  # Percentage used
+
+        psutil.cpu_percent()  # Overall CPU usage (%)
+        psutil.cpu_percent(
+            percpu=True
+        )  # Per-core usage as a list, e.g. [12.0, 5.3, 8.1, 3.2]
+
+        log = f"""
+==================== MEMORY ===================\n
+-------------------- Virtual ------------------\n
+    Total: {mem.total / 1024 / 1024:.2f} MB
+Available: {mem.available / 1024 / 1024:.2f} MB ... {100 - mem.percent:.1f}%
+     Used: {mem.used / 1024 / 1024:.2f} MB ... {mem.percent:.1f}%\n
+-------------------- Swap ---------------------\n
+    Total: {swap.total / 1024 / 1024:.2f} MB
+Available: {swap.free / 1024 / 1024:.2f} MB ... {100 - swap.percent:.1f}%
+     Used: {swap.used / 1024 / 1024:.2f} MB ... {swap.percent:.1f}%\n
+"""
+        logLines = log.count("\n") + 1
+
+        sys.stdout.flush()
+        print(log)
+
+        time.sleep(1)
+        sys.stdout.write(f"\033[{logLines}A")
+        sys.stdout.write("\r")
+        sys.stdout.write("\033[J")
+
+
 # TODO: Part 4:
 # - `download <file>`: read a text file containing URLs (one per line), add them to the download queue, and immediately begin downloading with 3 worker threads. A sample file `test_urls.txt` is provided for testing.
 # - `download <file> -w <number>`: same as above, but with a custom number of worker threads (e.g. `download urls.txt -w 5`)
@@ -180,97 +219,99 @@ def builtin_download(args: list[str]):
             numWorkers = int(args[index])
             args.pop(index)
             break
-        
+
     download_dir = "downloads"
     if len(args) > 1:
         download_dir = args[1]
     os.makedirs(download_dir, exist_ok=True)
-    
+
     urls = []
     text_file_path = args[0]
     if os.path.isfile(text_file_path):
         with open(text_file_path, "r") as f:
             for line in f:
                 urls.append(line.strip())
-    
+
     work_queue = queue.Queue()
-    
+
     def worker(index):
         print(f"Started worker [{index}] ")
         while True:
-            item = work_queue.get()     # Blocks until an item is available
+            item = work_queue.get()  # Blocks until an item is available
             if item is None:
                 print(f"Terminating worker [{index}]. (No more work in queue)")
                 work_queue.task_done()  # Breaks loop after no more urls are available
                 break
             print(f"Processing: {item}")
-            
+
             try:
                 response = requests.get(item)
             except requests.ConnectionError:
                 print("Could not connect")
             except requests.Timeout:
                 print("Request timed out")
-            
+
             filename = os.path.split(item)[-1]
             download_path = os.path.join(download_dir, filename)
             with open(download_path, "wb") as f:
                 f.write(response.content)
-                
+
             print(f"Downloaded: {filename} to path {download_path}")
             work_queue.task_done()
-    
-    threads =[]
+
+    threads = []
     for i in range(numWorkers):
         t = threading.Thread(target=worker, args=[i], daemon=True)
         threads.append(t)
         t.start()
-    
+
     for url in urls:
         work_queue.put(url)
-        
+
     for _ in range(numWorkers):
         work_queue.put(None)
-        
+
     work_queue.join()
-        
+
     for t in threads:
         t.join()
-        
+
+
 def builtin_help():
     return
-    
+
+
 commands_dict = {
-    'pwd': {
-        'function': builtin_pwd,
-        'description': "REPLACE THIS",
+    "pwd": {
+        "function": builtin_pwd,
+        "description": "REPLACE THIS",
     },
-    'exit': {
-        'function': builtin_exit,
-        'description': "REPLACE THIS",
+    "exit": {
+        "function": builtin_exit,
+        "description": "REPLACE THIS",
     },
-    'cd': {
-        'function': builtin_cd,
-        'description': "REPLACE THIS",
+    "cd": {
+        "function": builtin_cd,
+        "description": "REPLACE THIS",
     },
-    'procinfo': {
-        'function': builtin_procinfo,
-        'description': "REPLACE THIS",
+    "procinfo": {
+        "function": builtin_procinfo,
+        "description": "REPLACE THIS",
     },
-    'cat': {
-        'function': builtin_cat,
-        'description': "REPLACE THIS",
+    "cat": {
+        "function": builtin_cat,
+        "description": "REPLACE THIS",
     },
-    'head': {
-        'function': builtin_head,
-        'description': "REPLACE THIS",
+    "head": {
+        "function": builtin_head,
+        "description": "REPLACE THIS",
     },
-    'download': {
-        'function': builtin_download,
-        'description': "REPLACE THIS",
+    "download": {
+        "function": builtin_download,
+        "description": "REPLACE THIS",
     },
-    'help': {
-        'function': builtin_help,
-        'description': "REPLACE THIS",
+    "help": {
+        "function": builtin_help,
+        "description": "REPLACE THIS",
     },
 }
