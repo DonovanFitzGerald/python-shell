@@ -19,16 +19,16 @@ from pysh.colors import BLUE, GREEN, RESET
 
 
 def build_command_dict(functions: list[str]) -> dict:
+    """Builds a dictionary of all the built in commands available."""
     command_dict = {}
     for f in functions:
-        command_name = f.__qualname__.strip("builtin_")
+        command_name = f.__qualname__.replace("builtin_", "")
         command_dict[command_name] = f
     return command_dict
 
 
 command_functions = [obj for _, obj in inspect.getmembers(builtins, inspect.isfunction)]
 command_dict = build_command_dict(command_functions)
-print(command_dict)
 
 
 def prompt():

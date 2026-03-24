@@ -18,7 +18,7 @@ import sys
 # ---------------------------------------------------------------------------
 
 
-def builtin_pwd(args):
+def builtin_pwd() -> None:
     """
     Print the current working directory.
 
@@ -37,7 +37,7 @@ def builtin_pwd(args):
 # ---------------------------------------------------------------------------
 
 
-def builtin_exit(args):
+def builtin_exit() -> None:
     """
     Exit the shell.
 
@@ -58,15 +58,18 @@ def builtin_exit(args):
 
 
 def builtin_cd(args: list[str]) -> None:
+    """
+    Change shell directory.
+    """
     path = args[0]
     os.chdir(path)
 
 
-# - `pwd`: print the current working directory
-# - `echo <text>`: print text to the terminal
-# - `exit`: terminate the shell cleanly
 # - `help`: display a list of available built-in commands with brief descriptions
+
+
 # - `procinfo <pid>`: use Python's `os` or `psutil` module to display information about a process: its status, memory usage, CPU time, and parent PID
+
 
 # TODO: Part 2:
 # - `cat <file> [file2 ...]`: read and display the contents of one or more files. Handle missing files with a clear error message.
