@@ -186,14 +186,14 @@ def builtin_sysinfo(args):
 
         log = f"""
 ==================== MEMORY ===================\n
--------------------- Virtual ------------------\n
-    Total: {mem.total / 1024 / 1024:.2f} MB
-Available: {mem.available / 1024 / 1024:.2f} MB ... {100 - mem.percent:.1f}%
-     Used: {mem.used / 1024 / 1024:.2f} MB ... {mem.percent:.1f}%\n
+------------------- Virtual -------------------\n
+    Total: {mem.total / 1024 / 1024:9.2f} MB
+Available: {mem.available / 1024 / 1024:9.2f} MB ... {100 - mem.percent:>5.1f}%
+     Used: {mem.used / 1024 / 1024:9.2f} MB ... {mem.percent:>5.1f}%
 -------------------- Swap ---------------------\n
-    Total: {swap.total / 1024 / 1024:.2f} MB
-Available: {swap.free / 1024 / 1024:.2f} MB ... {100 - swap.percent:.1f}%
-     Used: {swap.used / 1024 / 1024:.2f} MB ... {swap.percent:.1f}%\n
+    Total: {swap.total / 1024 / 1024:9.2f} MB
+Available: {swap.free / 1024 / 1024:9.2f} MB ... {100 - swap.percent:>5.1f}%
+     Used: {swap.used / 1024 / 1024:9.2f} MB ... {swap.percent:>5.1f}%
 """
         logLines = log.count("\n") + 1
 
