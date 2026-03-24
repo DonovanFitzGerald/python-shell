@@ -12,8 +12,9 @@ This is the main module. It runs the shell loop:
 import grp
 import os
 import subprocess
+import inspect
 
-from pysh.builtins import builtin_exit, builtin_pwd, builtin_cd
+import pysh.builtins as builtins
 from pysh.colors import BLUE, GREEN, RESET
 
 
@@ -25,7 +26,8 @@ def build_command_dict(functions: list[str]) -> dict:
     return command_dict
 
 
-command_dict = build_command_dict([builtin_exit, builtin_pwd, builtin_cd])
+command_functions = [obj for _, obj in inspect.getmembers(builtins, inspect.isfunction)]
+command_dict = build_command_dict(command_functions)
 print(command_dict)
 
 

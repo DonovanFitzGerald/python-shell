@@ -9,8 +9,8 @@ Each built-in is a function that takes a list of string arguments.
 Look at builtin_pwd below as a complete example to follow.
 """
 
-import os
-import sys
+import os as __os
+import sys as __sys
 
 
 # ---------------------------------------------------------------------------
@@ -29,7 +29,7 @@ def builtin_pwd(args):
         pysh /home/student $ pwd
         /home/student
     """
-    print(os.getcwd())
+    print(__os.getcwd())
 
 
 # ---------------------------------------------------------------------------
@@ -44,7 +44,7 @@ def builtin_exit(args):
     Raises SystemExit which is caught by the main loop in shell.py
     to break out of the loop cleanly.
     """
-    sys.exit(0)
+    __sys.exit(0)
 
 
 # ---------------------------------------------------------------------------
@@ -59,7 +59,7 @@ def builtin_exit(args):
 
 def builtin_cd(args: list[str]) -> None:
     path = args[0]
-    os.chdir(path)
+    __os.chdir(path)
 
 
 # - `pwd`: print the current working directory
