@@ -214,13 +214,12 @@ def builtin_download(args: list[str]):
     for t in threads:
         t.join()
         
-command_functions = [
-    obj for name, obj in globals().items()
-    if inspect.isfunction(obj) and name.startswith("builtin_")
-]
-commands_dict = {}
-for f in command_functions:
-    command_name = f.__qualname__.replace("builtin_", "")
-    commands_dict[command_name] = f
+def builtin_help():
+    return
     
-print(commands_dict)
+commands_dict = {
+    'cd': {
+        'function': builtin_cd,
+        'description': "REPLACE THIS",
+    }
+}

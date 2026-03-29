@@ -51,7 +51,7 @@ def execute(command, args):
 
     # TODO: Add your own built-in commands here
     if command in builtins.commands_dict.keys():
-        builtins.commands_dict[command](args)
+        builtins.commands_dict[command].get("function")(args)
     else:
         # Run external commands as a child process.
         # subprocess.run will search for the command on the system PATH,
