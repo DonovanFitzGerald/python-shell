@@ -156,20 +156,41 @@ def builtin_download(args: list[str]):
             args.pop(index)
             break
     
+    urls = []
+    path = args[0]
+    if os.path.isfile(path):
+        with open(path, "r") as f:
+            for line in f:
+                urls.append(line)
+    
     work_queue = queue.Queue()
     
-    def worker():
+    def worker(index):
+        print(f"Started worker [{index}] ")
         while True:
             item = work_queue.get()     # Blocks until an item is available
+            if item is None:
+                print(f"Terminating worker [{index}]. (No more work in queue)")
+                work_queue.task_done()  # Breaks loop after no more urls are available
+                break
             print(f"Processing: {item}")
             time.sleep(2)
-            print(f"Downloaded {item}.")
+            print(f"Downloaded: {item}")
+            work_queue.task_done()
     
-    for _ in range(numWorkers):
-        t = threading.Thread(target=worker, daemon=True)
+    threads =[]
+    for i in range(numWorkers):
+        t = threading.Thread(target=worker, args=[i], daemon=True)
+        threads.append(t)
         t.start()
-    
-    urls = ["test_url_1", "test_url_2","test_url_3","test_url_4","test_url_5","test_url_6"]
     
     for url in urls:
         work_queue.put(url)
+        
+    for _ in range(numWorkers):
+        work_queue.put(None)
+        
+    work_queue.join()
+        
+    for t in threads:
+        t.join()
