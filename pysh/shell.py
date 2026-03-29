@@ -12,7 +12,6 @@ This is the main module. It runs the shell loop:
 import grp
 import os
 import subprocess
-import inspect
 
 import pysh.builtins as builtins
 from pysh.colors import BLUE, GREEN, RESET
