@@ -15,6 +15,7 @@ import psutil
 import threading
 import queue
 import time
+import requests
 
 
 # ---------------------------------------------------------------------------
@@ -155,13 +156,18 @@ def builtin_download(args: list[str]):
             numWorkers = int(args[index])
             args.pop(index)
             break
+        
+    download_dir = "downloads"
+    if len(args) > 1:
+        download_dir = args[1]
+    os.makedirs(download_dir, exist_ok=True)
     
     urls = []
-    path = args[0]
-    if os.path.isfile(path):
-        with open(path, "r") as f:
+    text_file_path = args[0]
+    if os.path.isfile(text_file_path):
+        with open(text_file_path, "r") as f:
             for line in f:
-                urls.append(line)
+                urls.append(line.strip())
     
     work_queue = queue.Queue()
     
@@ -174,8 +180,20 @@ def builtin_download(args: list[str]):
                 work_queue.task_done()  # Breaks loop after no more urls are available
                 break
             print(f"Processing: {item}")
-            time.sleep(2)
-            print(f"Downloaded: {item}")
+            
+            try:
+                response = requests.get(item)
+            except requests.ConnectionError:
+                print("Could not connect")
+            except requests.Timeout:
+                print("Request timed out")
+            
+            filename = os.path.split(item)[-1]
+            download_path = os.path.join(download_dir, filename)
+            with open(download_path, "wb") as f:
+                f.write(response.content)
+                
+            print(f"Downloaded: {filename} to path {download_path}")
             work_queue.task_done()
     
     threads =[]
