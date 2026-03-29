@@ -16,6 +16,7 @@ import threading
 import queue
 import time
 import requests
+import inspect
 
 
 # ---------------------------------------------------------------------------
@@ -212,3 +213,14 @@ def builtin_download(args: list[str]):
         
     for t in threads:
         t.join()
+        
+command_functions = [
+    obj for name, obj in globals().items()
+    if inspect.isfunction(obj) and name.startswith("builtin_")
+]
+commands_dict = {}
+for f in command_functions:
+    command_name = f.__qualname__.replace("builtin_", "")
+    commands_dict[command_name] = f
+    
+print(commands_dict)

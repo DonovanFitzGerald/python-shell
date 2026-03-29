@@ -18,19 +18,6 @@ import pysh.builtins as builtins
 from pysh.colors import BLUE, GREEN, RESET
 
 
-def build_command_dict(functions: list[str]) -> dict:
-    """Builds a dictionary of all the built in commands available."""
-    command_dict = {}
-    for f in functions:
-        command_name = f.__qualname__.replace("builtin_", "")
-        command_dict[command_name] = f
-    return command_dict
-
-
-command_functions = [obj for _, obj in inspect.getmembers(builtins, inspect.isfunction)]
-command_dict = build_command_dict(command_functions)
-
-
 def prompt():
     """Return the shell prompt string showing the current directory."""
     cwd = os.getcwd()
@@ -63,8 +50,8 @@ def execute(command, args):
     """
 
     # TODO: Add your own built-in commands here
-    if command in command_dict.keys():
-        command_dict[command](args)
+    if command in builtins.commands_dict.keys():
+        builtins.commands_dict[command](args)
     else:
         # Run external commands as a child process.
         # subprocess.run will search for the command on the system PATH,
