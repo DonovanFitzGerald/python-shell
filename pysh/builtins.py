@@ -12,6 +12,9 @@ Look at builtin_pwd below as a complete example to follow.
 import os
 import sys
 import psutil
+import threading
+import queue
+import time
 
 
 # ---------------------------------------------------------------------------
@@ -143,3 +146,30 @@ def builtin_head(args: list[str]) -> None:
 # - `download <file>`: read a text file containing URLs (one per line), add them to the download queue, and immediately begin downloading with 3 worker threads. A sample file `test_urls.txt` is provided for testing.
 # - `download <file> -w <number>`: same as above, but with a custom number of worker threads (e.g. `download urls.txt -w 5`)
 # - `download --status`: show the current state of the download queue and workers (how many items queued, how many workers active, completed count)
+def builtin_download(args: list[str]):
+    numWorkers = 3
+    for [index, string] in enumerate(args):
+        if string == "-w":
+            index
+            args.pop(index)
+            numWorkers = int(args[index])
+            args.pop(index)
+            break
+    
+    work_queue = queue.Queue()
+    
+    def worker():
+        while True:
+            item = work_queue.get()     # Blocks until an item is available
+            print(f"Processing: {item}")
+            time.sleep(2)
+            print(f"Downloaded {item}.")
+    
+    for _ in range(numWorkers):
+        t = threading.Thread(target=worker, daemon=True)
+        t.start()
+    
+    urls = ["test_url_1", "test_url_2","test_url_3","test_url_4","test_url_5","test_url_6"]
+    
+    for url in urls:
+        work_queue.put(url)
