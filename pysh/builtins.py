@@ -218,8 +218,36 @@ def builtin_help():
     return
     
 commands_dict = {
+    'pwd': {
+        'function': builtin_pwd,
+        'description': "REPLACE THIS",
+    },
+    'exit': {
+        'function': builtin_exit,
+        'description': "REPLACE THIS",
+    },
     'cd': {
         'function': builtin_cd,
         'description': "REPLACE THIS",
-    }
+    },
+    'procinfo': {
+        'function': builtin_procinfo,
+        'description': "REPLACE THIS",
+    },
+    'cat': {
+        'function': builtin_cat,
+        'description': "REPLACE THIS",
+    },
+    'head': {
+        'function': builtin_head,
+        'description': "REPLACE THIS",
+    },
+    'download': {
+        'function': builtin_download,
+        'description': "REPLACE THIS",
+    },
+    'help': {
+        'function': builtin_help,
+        'description': "REPLACE THIS",
+    },
 }
