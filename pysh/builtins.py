@@ -310,10 +310,22 @@ alias_commands_dict = {}
 
 
 def builtin_alias(args: list[str]) -> None:
-    name, command_start = args[0].split("=")
-    args[0] = command_start
+    if not args:
+        for name, command in alias_commands_dict.items():
+            print(f'{name} = "{command}"')
+        return
 
-    command = " ".join(args).replace('"', "")
+    definition = " ".join(args)
+
+    name, command = definition.split("=", 1)
+    name = name.strip()
+    command = command.strip()
+
+    if (command.startswith('"') and command.endswith('"')) or (
+        command.startswith("'") and command.endswith("'")
+    ):
+        command = command[1:-1]
+
     alias_commands_dict[name] = command
 
 
