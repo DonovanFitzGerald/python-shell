@@ -278,41 +278,105 @@ def builtin_download(args: list[str]):
         t.join()
 
 
-def builtin_help():
-    return
+def builtin_help(args: list[str]) -> None:
+    command_width = 30
+    option_padding = 5
+
+    for name, meta in commands_dict.items():
+        arguments = meta.get("arguments", [])
+        description = meta.get("description", "")
+        options = meta.get("options", [])
+
+        command_text = name
+        if arguments:
+            command_text += "".join(f" [{arg}]" for arg in arguments)
+
+        print(f"{command_text:<{command_width}} - {description}")
+
+        for option in options:
+            flag = option["flag"]
+            value = option.get("value")
+            flag_description = option.get("description", "")
+
+            option_text = f"{flag} <{value}>" if value else flag
+            print(
+                f"{'':{option_padding}}{option_text:<{command_width - option_padding}} - {flag_description}"
+            )
+
+        print()
 
 
 commands_dict = {
     "pwd": {
         "function": builtin_pwd,
-        "description": "REPLACE THIS",
+        "description": "Print the current working directory.",
+        "arguments": [],
+        "options": [],
     },
     "exit": {
         "function": builtin_exit,
-        "description": "REPLACE THIS",
+        "description": "Exit the shell.",
+        "arguments": [],
+        "options": [],
     },
     "cd": {
         "function": builtin_cd,
-        "description": "REPLACE THIS",
+        "description": "Change the current working directory.",
+        "arguments": ["path"],
+        "options": [],
     },
     "procinfo": {
         "function": builtin_procinfo,
-        "description": "REPLACE THIS",
+        "description": "Display information about a process by PID, including status, memory usage, CPU usage, and parent PID.",
+        "arguments": ["pid"],
+        "options": [],
     },
     "cat": {
         "function": builtin_cat,
-        "description": "REPLACE THIS",
+        "description": "Read and display the contents of one or more files.",
+        "arguments": ["file", "file2 ..."],
+        "options": [],
     },
     "head": {
         "function": builtin_head,
-        "description": "REPLACE THIS",
+        "description": "Display the first lines of a file. Defaults to 10 lines.",
+        "arguments": ["file"],
+        "options": [
+            {
+                "flag": "-n",
+                "value": "number",
+                "description": "Number of lines to display.",
+            }
+        ],
+    },
+    "wc": {
+        "function": builtin_wc,
+        "description": "Count lines, words, and characters in one or more files.",
+        "arguments": ["file", "file2 ..."],
+        "options": [],
+    },
+    "sysinfo": {
+        "function": builtin_sysinfo,
+        "description": "Display a live view of system resource usage, including memory, swap, and CPU statistics.",
+        "arguments": [],
+        "options": [],
     },
     "download": {
         "function": builtin_download,
-        "description": "REPLACE THIS",
+        "description": 'Download URLs from a text file optionally with a download directory ( defaults to "/downloads").',
+        "arguments": ["text_file", "download_dir"],
+        "options": [
+            {
+                "flag": "-w",
+                "value": "number",
+                "description": "Number of worker threads to use.",
+            },
+        ],
     },
     "help": {
         "function": builtin_help,
-        "description": "REPLACE THIS",
+        "description": "Display the list of available built-in commands and their descriptions.",
+        "arguments": [],
+        "options": [],
     },
 }
