@@ -48,8 +48,10 @@ def execute(command, args):
     as an external program using subprocess.
     """
 
-    # TODO: Add your own built-in commands here
-    if command in builtins.commands_dict.keys():
+    if command in builtins.alias_commands_dict.keys():
+        command, args = parse(builtins.alias_commands_dict[command])
+        execute(command, args)
+    elif command in builtins.commands_dict.keys():
         builtins.commands_dict[command].get("function")(args)
     else:
         # Run external commands as a child process.

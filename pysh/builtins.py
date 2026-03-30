@@ -306,10 +306,22 @@ def builtin_help(args: list[str]) -> None:
         print()
 
 
+alias_commands_dict = {}
+
+
+def builtin_alias(args: list[str]) -> None:
+    name, command_start = args[0].split("=")
+    args[0] = command_start
+
+    command = " ".join(args).replace('"', "")
+    alias_commands_dict[name] = command
+
+
 commands_dict = {
     "pwd": {
         "function": builtin_pwd,
         "description": "Print the current working directory.",
+        "original_name": "pwd",
         "arguments": [],
         "options": [],
     },
@@ -376,6 +388,12 @@ commands_dict = {
     "help": {
         "function": builtin_help,
         "description": "Display the list of available built-in commands and their descriptions.",
+        "arguments": [],
+        "options": [],
+    },
+    "alias": {
+        "function": builtin_alias,
+        "description": "",
         "arguments": [],
         "options": [],
     },
