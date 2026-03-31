@@ -271,6 +271,47 @@ def builtin_download(args: list[str]) -> None:
         return
 
     if args[0] == "--status":
+        if len(args) >= 2 and (args[1] == "--verbose" or "-v"):
+            with download_state["lock"]:
+                queued = max(
+                    0, download_state["queue"].qsize() - len(download_state["threads"])
+                )
+                workers = len(download_state["threads"])
+                active = list(download_state["active"])
+                completed = list(download_state["completed"])
+                failed = list(download_state["failed"])
+
+            print("========== DOWNLOAD STATUS ==========")
+            print(f"Queued:    {queued}")
+            print(f"Workers:   {workers}")
+            print(f"Active:    {len(active)}")
+            print(f"Completed: {len(completed)}")
+            print(f"Failed:    {len(failed)}")
+            print()
+
+            if active:
+                print("ACTIVE DOWNLOADS")
+                print("----------------")
+                for url in active:
+                    print(f"- {url}")
+                print()
+
+            if completed:
+                print("COMPLETED DOWNLOADS")
+                print("-------------------")
+                for url in completed:
+                    print(f"- {url}")
+                print()
+
+            if failed:
+                print("FAILED DOWNLOADS")
+                print("----------------")
+                for url, error in failed:
+                    print(f"- {url}")
+                    print(f"  Error: {error}")
+                print()
+            return
+
         with download_state["lock"]:
             active = len(download_state["active"])
             completed = len(download_state["completed"])
