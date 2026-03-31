@@ -211,71 +211,139 @@ Available: {swap.free / 1024 / 1024:9.2f} MB ... {100 - swap.percent:>5.1f}%
 # - `download <file>`: read a text file containing URLs (one per line), add them to the download queue, and immediately begin downloading with 3 worker threads. A sample file `test_urls.txt` is provided for testing.
 # - `download <file> -w <number>`: same as above, but with a custom number of worker threads (e.g. `download urls.txt -w 5`)
 # - `download --status`: show the current state of the download queue and workers (how many items queued, how many workers active, completed count)
-def builtin_download(args: list[str]):
-    numWorkers = 3
-    for [index, string] in enumerate(args):
-        if string == "-w":
-            index
-            args.pop(index)
-            numWorkers = int(args[index])
-            args.pop(index)
-            break
+download_state = {
+    "queue": queue.Queue(),
+    "threads": [],
+    "active": [],
+    "completed": [],
+    "failed": [],
+    "started": False,
+    "download_dir": "downloads",
+    "lock": threading.Lock(),
+}
 
-    download_dir = "downloads"
-    if len(args) > 1:
-        download_dir = args[1]
-    os.makedirs(download_dir, exist_ok=True)
 
-    urls = []
-    text_file_path = args[0]
-    if os.path.isfile(text_file_path):
-        with open(text_file_path, "r") as f:
-            for line in f:
-                urls.append(line.strip())
+def start_download_workers(num_workers: int) -> None:
+    if download_state["started"]:
+        return
 
-    work_queue = queue.Queue()
-
-    def worker(index):
-        print(f"Started worker [{index}] ")
+    def worker() -> None:
         while True:
-            item = work_queue.get()  # Blocks until an item is available
+            item = download_state["queue"].get()
+
             if item is None:
-                print(f"Terminating worker [{index}]. (No more work in queue)")
-                work_queue.task_done()  # Breaks loop after no more urls are available
+                download_state["queue"].task_done()
                 break
-            print(f"Processing: {item}")
+
+            url, download_dir = item
+
+            with download_state["lock"]:
+                download_state["active"].append(url)
 
             try:
-                response = requests.get(item)
-            except requests.ConnectionError:
-                print("Could not connect")
-            except requests.Timeout:
-                print("Request timed out")
+                response = requests.get(url)
+                response.raise_for_status()
 
-            filename = os.path.split(item)[-1]
-            download_path = os.path.join(download_dir, filename)
-            with open(download_path, "wb") as f:
-                f.write(response.content)
+                filename = os.path.basename(url) or f"download_{threading.get_ident()}"
+                download_path = os.path.join(download_dir, filename)
 
-            print(f"Downloaded: {filename} to path {download_path}")
-            work_queue.task_done()
+                with open(download_path, "wb") as f:
+                    f.write(response.content)
 
-    threads = []
-    for i in range(numWorkers):
-        t = threading.Thread(target=worker, args=[i], daemon=True)
-        threads.append(t)
+                with download_state["lock"]:
+                    download_state["completed"].append(url)
+
+            except requests.RequestException as e:
+                with download_state["lock"]:
+                    download_state["failed"].append([url, e])
+
+            finally:
+                with download_state["lock"]:
+                    download_state["active"].remove(url)
+                download_state["queue"].task_done()
+
+    for _ in range(num_workers):
+        t = threading.Thread(target=worker, daemon=True)
+        download_state["threads"].append(t)
         t.start()
 
-    for url in urls:
-        work_queue.put(url)
+    download_state["started"] = True
 
-    for _ in range(numWorkers):
-        work_queue.put(None)
 
-    work_queue.join()
+def builtin_download(args: list[str]) -> None:
+    if not args:
+        print("pysh: download: expected a file or --status")
+        return
 
-    for t in threads:
-        t.join()
+    if args[0] == "--status":
+        qsize = download_state["queue"].qsize()
+        with download_state["lock"]:
+            active = len(download_state["active"])
+            completed = len(download_state["completed"])
+            failed = len(download_state["failed"])
+            workers = len(download_state["threads"])
+
+        print(f"Queued: {qsize}")
+        print(f"Workers: {workers}")
+        print(f"Active: {active}")
+        print(f"Completed: {completed}")
+        print(f"Failed: {failed}")
+        return
+
+    num_workers = 3
+    download_dir = "downloads"
+    text_file_path = None
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+
+        if arg == "-w":
+            if i + 1 >= len(args):
+                print("pysh: download: -w requires a number")
+                return
+            try:
+                num_workers = int(args[i + 1])
+            except ValueError:
+                print("pysh: download: worker count must be an integer")
+                return
+            i += 2
+            continue
+
+        if text_file_path is None:
+            text_file_path = arg
+        elif download_dir == "downloads":
+            download_dir = arg
+        else:
+            print(f"pysh: download: unexpected argument: {arg}")
+            return
+
+        i += 1
+
+    if text_file_path is None:
+        print("pysh: download: missing URL file")
+        return
+
+    if not os.path.isfile(text_file_path):
+        print(f'pysh: download: "{text_file_path}" file not found')
+        return
+
+    os.makedirs(download_dir, exist_ok=True)
+
+    start_download_workers(num_workers)
+
+    queued_now = 0
+    with open(text_file_path, "r") as f:
+        for line in f:
+            url = line.strip()
+            if not url:
+                continue
+            download_state["queue"].put((url, download_dir))
+            queued_now += 1
+
+    print(
+        f"Queued {queued_now} download(s) with {len(download_state['threads'])} worker(s)."
+    )
 
 
 def builtin_help(args: list[str]) -> None:
