@@ -23,3 +23,12 @@ def builtin_wc(args: list[str]) -> None:
     print(f"Lines: {line_count}")
     print(f"Words: {word_count}")
     print(f"Characters: {char_count}")
+
+
+COMMAND = {
+    "name": "wc",
+    "function": builtin_wc,
+    "description": "Count lines, words, and characters in one or more files.",
+    "arguments": ["file", "file2 ..."],
+    "options": [],
+}

@@ -12,3 +12,12 @@ def builtin_cat(args: list[str]) -> None:
                 print(contents)
         else:
             print(f'pysh: "{path}" file not found')
+
+
+COMMAND = {
+    "name": "cat",
+    "function": builtin_cat,
+    "description": "Read and display the contents of one or more files.",
+    "arguments": ["file", "file2 ..."],
+    "options": [],
+}

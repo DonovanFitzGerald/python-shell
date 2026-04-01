@@ -13,3 +13,12 @@ def builtin_pwd(args) -> None:
         /home/student
     """
     print(os.getcwd())
+
+
+COMMAND = {
+    "name": "pwd",
+    "function": builtin_pwd,
+    "description": "Print the current working directory.",
+    "arguments": [],
+    "options": [],
+}

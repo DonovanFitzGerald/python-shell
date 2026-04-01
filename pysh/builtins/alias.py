@@ -24,7 +24,7 @@ def builtin_alias(args: list[str]) -> None:
 COMMAND = {
     "name": "alias",
     "function": builtin_alias,
-    "description": "",
+    "description": "Define or list command aliases.",
     "arguments": [],
     "options": [],
 }

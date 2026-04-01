@@ -69,7 +69,7 @@ def builtin_sysinfo(args: list[str]) -> None:
     for proc in psutil.process_iter():
         try:
             proc.cpu_percent(interval=None)
-        except psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess:
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
 
     try:
@@ -101,7 +101,7 @@ def builtin_sysinfo(args: list[str]) -> None:
                             "cpu_percent": cpu,
                         }
                     )
-                except psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess:
+                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
                     continue
 
             if sort_by == "cpu":
@@ -166,7 +166,7 @@ def builtin_sysinfo(args: list[str]) -> None:
     for proc in psutil.process_iter():
         try:
             proc.cpu_percent(interval=None)
-        except psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess:
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
 
     time.sleep(0.15)
@@ -241,3 +241,23 @@ def builtin_sysinfo(args: list[str]) -> None:
     ]
 
     print("\n".join(log_lines))
+
+
+COMMAND = {
+    "name": "sysinfo",
+    "function": builtin_sysinfo,
+    "description": "Display a live view of memory, swap, CPU, and top processes.",
+    "arguments": [],
+    "options": [
+        {
+            "flag": "--sort",
+            "value": "cpu|memory",
+            "description": "Sort top processes by CPU or memory usage.",
+        },
+        {
+            "flag": "-i",
+            "value": "seconds",
+            "description": "Refresh interval in seconds. Default is 2.",
+        },
+    ],
+}

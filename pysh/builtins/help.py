@@ -1,7 +1,6 @@
-from pysh.builtins.__all__ import commands_dict
-
-
 def builtin_help(args: list[str]) -> None:
+    from pysh.builtins import commands_dict
+
     command_width = 30
     option_padding = 5
 
@@ -27,3 +26,12 @@ def builtin_help(args: list[str]) -> None:
             )
 
         print()
+
+
+COMMAND = {
+    "name": "help",
+    "function": builtin_help,
+    "description": "Display the list of available built-in commands and their descriptions.",
+    "arguments": [],
+    "options": [],
+}

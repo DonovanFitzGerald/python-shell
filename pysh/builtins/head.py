@@ -23,3 +23,18 @@ def builtin_head(args: list[str]) -> None:
                 print(f.readline())
     else:
         print(f'pysh: "{path}" file not found')
+
+
+COMMAND = {
+    "name": "head",
+    "function": builtin_head,
+    "description": "Display the first lines of a file. Defaults to 10 lines.",
+    "arguments": ["file"],
+    "options": [
+        {
+            "flag": "-n",
+            "value": "number",
+            "description": "Number of lines to display.",
+        }
+    ],
+}

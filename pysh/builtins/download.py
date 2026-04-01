@@ -185,3 +185,18 @@ def builtin_download(args: list[str]) -> None:
     print(
         f"Queued {queued_now} download(s) with {len(download_state['threads'])} worker(s)."
     )
+
+
+COMMAND = {
+    "name": "download",
+    "function": builtin_download,
+    "description": "Download URLs from a text file optionally with a download directory.",
+    "arguments": ["text_file", "download_dir"],
+    "options": [
+        {
+            "flag": "-w",
+            "value": "number",
+            "description": "Number of worker threads to use.",
+        }
+    ],
+}

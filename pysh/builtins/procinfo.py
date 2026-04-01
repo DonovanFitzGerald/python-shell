@@ -25,3 +25,12 @@ def builtin_procinfo(args: list[str]) -> None:
     )  # Resident memory in bytes
 
     print(psutil.Process(pid))
+
+
+COMMAND = {
+    "name": "procinfo",
+    "function": builtin_procinfo,
+    "description": "Display information about a process by PID, including status, memory usage, CPU usage, and parent PID.",
+    "arguments": ["pid"],
+    "options": [],
+}
