@@ -1,183 +1,66 @@
-import os
-import subprocess
+import sys
 import time
+import shutil
 import psutil
 
 
-# TODO: Part 3:
-# - `sysinfo` that provides a real-time view of the system's resource usage, similar to `top` or `htop`. This command should display:
-# - Memory usage: total, used, available, and percentage of physical memory in use. Also show swap memory usage.
-# - CPU usage: overall CPU usage percentage and per-core breakdown
-# - Top processes: display the top 10 processes sorted by memory or CPU usage. Use a `--sort` flag to specify the order (e.g. `sysinfo --sort cpu` or `sysinfo --sort memory`). Default to sorting by memory.
-# - Refreshing display: the output should refresh at a configurable interval (default: every 2 seconds).
+def mb(bytes_value):
+    return bytes_value / (1024 * 1024)
 
 
-def builtin_sysinfo(args: list[str]) -> None:
-    sort_by = "memory"
-    interval = 2.0
+def get_terminal_width():
+    return shutil.get_terminal_size(fallback=(80, 24)).columns
 
-    i = 0
-    while i < len(args):
-        arg = args[i]
 
-        if arg == "--sort":
-            if i + 1 >= len(args):
-                print("pysh: sysinfo: --sort requires 'cpu' or 'memory'")
-                return
+def get_terminal_height():
+    return shutil.get_terminal_size(fallback=(80, 24)).lines
 
-            value = args[i + 1].lower()
-            if value not in ("cpu", "memory"):
-                print("pysh: sysinfo: --sort must be 'cpu' or 'memory'")
-                return
 
-            sort_by = value
-            i += 2
-            continue
+def build_section_header(title):
+    width = get_terminal_width()
+    return f"{title:=^{width}}"
 
-        if arg in ("-i", "--interval"):
-            if i + 1 >= len(args):
-                print("pysh: sysinfo: interval flag requires a number")
-                return
 
-            try:
-                interval = float(args[i + 1])
-            except ValueError:
-                print("pysh: sysinfo: interval must be a number")
-                return
-
-            if interval <= 0:
-                print("pysh: sysinfo: interval must be greater than 0")
-                return
-
-            i += 2
-            continue
-
-        print(f"pysh: sysinfo: unexpected argument: {arg}")
-        return
-
-    def mb(value):
-        return value / 1024 / 1024
-
-    def clear_terminal() -> None:
-        subprocess.run(
-            ["cls"] if os.name == "nt" else ["clear"],
-            shell=(os.name == "nt"),
-            check=False,
-        )
-
-    psutil.cpu_percent(interval=None)
-    for proc in psutil.process_iter():
-        try:
-            proc.cpu_percent(interval=None)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-
-    try:
-        while True:
-            mem = psutil.virtual_memory()
-            swap = psutil.swap_memory()
-
-            cpu_total = psutil.cpu_percent(interval=None)
-            cpu_per_core = psutil.cpu_percent(interval=None, percpu=True)
-
-            processes = []
-            for proc in psutil.process_iter(
-                ["pid", "name", "ppid", "memory_info", "cpu_percent", "status"]
-            ):
-                try:
-                    info = proc.info
-                    rss = info["memory_info"].rss if info["memory_info"] else 0
-                    cpu = (
-                        info["cpu_percent"] if info["cpu_percent"] is not None else 0.0
-                    )
-
-                    processes.append(
-                        {
-                            "pid": info["pid"],
-                            "name": info["name"] or "?",
-                            "ppid": info["ppid"],
-                            "status": info["status"] or "?",
-                            "memory_mb": mb(rss),
-                            "cpu_percent": cpu,
-                        }
-                    )
-                except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                    continue
-
-            if sort_by == "cpu":
-                processes.sort(key=lambda p: p["cpu_percent"], reverse=True)
-            else:
-                processes.sort(key=lambda p: p["memory_mb"], reverse=True)
-
-            top_processes = processes[:10]
-
-            core_lines = [
-                "===================== CPU =====================",
-                f"Overall: {cpu_total:>5.1f}%",
-            ]
-            for index, value in enumerate(cpu_per_core):
-                core_lines.append(f"Core {index:>2}: {value:>5.1f}%")
-
-            process_lines = [
-                "================= TOP PROCESSES =================",
-                f"{'PID':>7}  {'PPID':>7}  {'CPU %':>7}  {'MEM MB':>10}  {'STATUS':<12}  NAME",
-                "-" * 70,
-            ]
-            for proc in top_processes:
-                process_lines.append(
-                    f"{proc['pid']:>7}  "
-                    f"{proc['ppid']:>7}  "
-                    f"{proc['cpu_percent']:>7.1f}  "
-                    f"{proc['memory_mb']:>10.2f}  "
-                    f"{proc['status']:<12.12}  "
-                    f"{proc['name']}"
-                )
-
-            log_lines = [
-                "==================== MEMORY ====================",
-                "------------------- Virtual -------------------",
-                f"    Total: {mb(mem.total):9.2f} MB",
-                f"Available: {mb(mem.available):9.2f} MB     {100 - mem.percent:>5.1f}%",
-                f"     Used: {mb(mem.used):9.2f} MB     {mem.percent:>5.1f}%",
-                "-------------------- Swap ---------------------",
-                f"    Total: {mb(swap.total):9.2f} MB",
-                f"Available: {mb(swap.free):9.2f} MB     {100 - swap.percent:>5.1f}%",
-                f"     Used: {mb(swap.used):9.2f} MB     {swap.percent:>5.1f}%",
-                "",
-                *core_lines,
-                "",
-                *process_lines,
-            ]
-
-            log = "\n".join(log_lines)
-
-            clear_terminal()
-            print(log, flush=True)
-
-            time.sleep(interval)
-
-    except KeyboardInterrupt:
-        print()
-
-    def mb(value: int | float) -> float:
-        return value / 1024 / 1024
-
-    psutil.cpu_percent(interval=None)
-    for proc in psutil.process_iter():
-        try:
-            proc.cpu_percent(interval=None)
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-            pass
-
-    time.sleep(0.15)
-
+def build_memory_log():
     mem = psutil.virtual_memory()
     swap = psutil.swap_memory()
 
+    lines = [
+        build_section_header(" MEMORY "),
+        f"{'--- Virtual ---':^40}",
+        f"    Total: {mb(mem.total):9.2f} MB",
+        f"Available: {mb(mem.available):9.2f} MB     {100 - mem.percent:>5.1f}% free",
+        f"     Used: {mb(mem.used):9.2f} MB     {mem.percent:>5.1f}% used",
+        f"{'--- Swap ---':^40}",
+        f"    Total: {mb(swap.total):9.2f} MB",
+        f"     Used: {mb(swap.used):9.2f} MB     {swap.percent:>5.1f}% used",
+    ]
+    return lines
+
+
+def build_cpu_log():
     cpu_total = psutil.cpu_percent(interval=None)
     cpu_per_core = psutil.cpu_percent(interval=None, percpu=True)
 
+    lines = ["", build_section_header(" CPU "), f"Overall Usage: {cpu_total:>5.1f}%"]
+
+    # Create columns for cores to save vertical space if many cores exist
+    core_str = ""
+    for i, val in enumerate(cpu_per_core):
+        core_str += f"Core {i:>2}: {val:>5.1f}%  | "
+        if (i + 1) % 3 == 0:  # Wrap every 3 cores
+            lines.append(core_str.rstrip(" | "))
+            core_str = ""
+    if core_str:
+        lines.append(core_str.rstrip(" | "))
+
+    return lines
+
+
+def build_process_log(sort_by):
+    width = get_terminal_width()
     processes = []
+
     for proc in psutil.process_iter(
         ["pid", "name", "ppid", "memory_info", "cpu_percent", "status"]
     ):
@@ -185,7 +68,6 @@ def builtin_sysinfo(args: list[str]) -> None:
             info = proc.info
             rss = info["memory_info"].rss if info["memory_info"] else 0
             cpu = info["cpu_percent"] if info["cpu_percent"] is not None else 0.0
-
             processes.append(
                 {
                     "pid": info["pid"],
@@ -199,48 +81,80 @@ def builtin_sysinfo(args: list[str]) -> None:
         except psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess:
             continue
 
-    if sort_by == "cpu":
-        processes.sort(key=lambda p: p["cpu_percent"], reverse=True)
-    else:
-        processes.sort(key=lambda p: p["memory_mb"], reverse=True)
-
+    # Sort logic
+    key = "cpu_percent" if sort_by == "cpu" else "memory_mb"
+    processes.sort(key=lambda p: p[key], reverse=True)
     top_processes = processes[:10]
 
-    core_lines = []
-    core_lines.append("===================== CPU =====================")
-    core_lines.append(f"Overall: {cpu_total:>5.1f}%")
-    for index, value in enumerate(cpu_per_core):
-        core_lines.append(f"Core {index:>2}: {value:>5.1f}%")
-
-    process_lines = []
-    process_lines.append("================= TOP PROCESSES =================")
-    process_lines.append(
+    header = (
         f"{'PID':>7}  {'PPID':>7}  {'CPU %':>7}  {'MEM MB':>10}  {'STATUS':<12}  NAME"
     )
-    process_lines.append("-" * 76)
+    lines = ["", build_section_header(" TOP PROCESSES "), header, "-" * min(width, 80)]
 
     for proc in top_processes:
-        process_lines.append(
+        line = (
             f"{proc['pid']:>7}  {proc['ppid']:>7}  {proc['cpu_percent']:>7.1f}  "
             f"{proc['memory_mb']:>10.2f}  {proc['status']:<12.12}  {proc['name']}"
         )
+        lines.append(line[:width])  # Truncate to terminal width
 
-    log_lines = [
-        "==================== MEMORY ====================",
-        "------------------- Virtual -------------------",
-        f"    Total: {mb(mem.total):9.2f} MB",
-        f"Available: {mb(mem.available):9.2f} MB     {100 - mem.percent:>5.1f}%",
-        f"     Used: {mb(mem.used):9.2f} MB     {mem.percent:>5.1f}%",
-        "-------------------- Swap ---------------------",
-        f"    Total: {mb(swap.total):9.2f} MB",
-        f"Available: {mb(swap.free):9.2f} MB     {100 - swap.percent:>5.1f}%",
-        f"     Used: {mb(swap.used):9.2f} MB     {swap.percent:>5.1f}%",
-        "",
-        *core_lines,
-        *process_lines,
-    ]
+    return lines
 
-    print("\n".join(log_lines))
+
+def builtin_sysinfo(args: list[str]) -> None:
+    sort_by = "memory"
+    interval = 2.0
+
+    # Argument Parsing
+    i = 0
+    while i < len(args):
+        if args[i] == "--sort" and i + 1 < len(args):
+            sort_by = args[i + 1].lower()
+            i += 2
+        elif args[i] in ("-i", "--interval") and i + 1 < len(args):
+            try:
+                interval = float(args[i + 1])
+            except ValueError:
+                print("Error: Interval must be a number")
+                return
+            i += 2
+        else:
+            i += 1
+
+    # Initial CPU call to seed psutil percentages
+    psutil.cpu_percent(interval=None)
+
+    try:
+        line_count = 0
+        print()
+        while True:
+            # 1. Build the log content
+            all_lines = []
+            all_lines.extend(build_memory_log())
+            all_lines.extend(build_cpu_log())
+            all_lines.extend(build_process_log(sort_by))
+
+            # 2. Clear previous output (ANSI Cursor Up)
+            # if line_count > 0:
+            # \033[F moves cursor to beginning of previous line
+
+            # 3. Print the log
+            # Pad each line with spaces to overwrite previous longer characters
+            width = get_terminal_width()
+            height = get_terminal_height()
+            output = "\n".join([line.ljust(width) for line in all_lines[-height:]])
+
+            sys.stdout.write("\r")
+            sys.stdout.write(f"\033[{line_count}F")
+            print(output, flush=True, end="")
+            line_count = output.count("\n")
+            line_count = line_count if height > line_count else height
+
+            # line_count = len(all_lines)
+            time.sleep(interval)
+
+    except KeyboardInterrupt:
+        print("\nExiting sysinfo...")
 
 
 COMMAND = {
@@ -249,15 +163,7 @@ COMMAND = {
     "description": "Display a live view of memory, swap, CPU, and top processes.",
     "arguments": [],
     "options": [
-        {
-            "flag": "--sort",
-            "value": "cpu|memory",
-            "description": "Sort top processes by CPU or memory usage.",
-        },
-        {
-            "flag": "-i",
-            "value": "seconds",
-            "description": "Refresh interval in seconds. Default is 2.",
-        },
+        {"flag": "--sort", "value": "cpu|memory", "description": "Sort order."},
+        {"flag": "-i", "value": "seconds", "description": "Refresh interval."},
     ],
 }
