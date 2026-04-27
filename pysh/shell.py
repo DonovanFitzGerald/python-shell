@@ -14,7 +14,7 @@ import os
 import subprocess
 
 import pysh.builtins as builtins
-from pysh.colors import BLUE, GREEN, RESET
+from pysh.colors import BLUE, YELLOW, RED, GREEN, RESET
 
 
 def prompt():
@@ -66,17 +66,30 @@ def execute(command, args):
 def main():
     """Entry point for the shell."""
 
+    print(YELLOW)
     print(
         r"""
- __
- \ \
-  \ \
-  / /
- /_/   ______
-      /_____/"""
+        __—————————__          
+     _/—¯           ¯--v_      
+   _/¯                ¯L¯\_    
+  /[          _—_      ][=\_   
+ ]/ ___      (—¯@)     _[=]$   
+ #I//_$#:___ ¯———¯    _/==/#   
+-$$+###=#+*#\      __/¯=_/\/   
+¯+####µ#/I¯¯)\\/-——¯`=_/¯_/    
+  ¯#$———¯`%/_______—=Cµ—$¯     
+  _/¯=_=/=¯¯¯¯¯¯¯¯¯¯¯-$I$I={_  
+ /¯                _^¯    ]#\L 
+][                 #_____—/¯_#L
+$\_             _—/T__I__ƒ/—__[
+\*/¯————_—ƒ——^—¯¯=_/¯==————¯$+ 
+ \vI—\——____—————¯`%%%_=@@@//` 
+   ¯¯\==__————————^—_I__——^¯   
+          ¯¯¯¯¯¯¯¯¯¯`          
+      """
     )
 
-    print()
+    print(RESET)
     print("Welcome to pysh! Type 'help' to see available commands.\n")
     print(f"Current process ID: {os.getpid()}")
 
