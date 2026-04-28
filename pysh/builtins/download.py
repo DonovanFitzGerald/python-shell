@@ -28,7 +28,6 @@ def download_worker() -> None:
 
         # Remove thread on kill condition
         if item is None:
-            download_state["queue"].task_done()
             with download_state["lock"]:
                 if current in download_state["threads"]:
                     download_state["threads"].remove(current)
@@ -184,7 +183,7 @@ def builtin_download(args: list[str]) -> None:
             queued_now += 1
 
     for _ in range(new_workers):
-        download_state["queue"].put(None)  # Add Kill condition to Queue
+        download_state["queue"].put(None)  # Add Sentinal kill flag to Queue
 
     print(
         f"Queued {queued_now} download(s) with {len(download_state['threads'])} worker(s)."

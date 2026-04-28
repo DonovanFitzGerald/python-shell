@@ -80,9 +80,11 @@ def build_process_log(sort_by):
         except psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess:
             continue
 
-    # Sort logic
+    # MARK: Sort logic
     key = "cpu_percent" if sort_by == "cpu" else "memory_mb"
-    processes.sort(key=lambda p: p[key], reverse=True)
+    processes.sort(
+        key=lambda p: p[key], reverse=True
+    )  # Lambda similar to callback function
     top_processes = processes[:10]
 
     header = (
@@ -104,6 +106,7 @@ def builtin_sysinfo(args: list[str]) -> None:
     sort_by = "memory"
     interval = 2.0
     i = 0
+    # MARK: Argument / Flag processing
     while i < len(args):
         if args[i] == "--sort" and i + 1 < len(args):
             sort_by = args[i + 1].lower()
@@ -120,22 +123,28 @@ def builtin_sysinfo(args: list[str]) -> None:
 
     psutil.cpu_percent(interval=None)
 
+    # MARK: Printing
     try:
         line_count = 0
         print()
         while True:
+            # Building output
             all_lines = []
             all_lines.extend(build_memory_log())
             all_lines.extend(build_cpu_log())
             all_lines.extend(build_process_log(sort_by))
 
+            # Terminal dimensions
             width = get_terminal_width()
             height = get_terminal_height()
             output = "\n".join([line.ljust(width) for line in all_lines[-height:]])
 
-            sys.stdout.write("\r")
-            sys.stdout.write(f"\033[{line_count}F")
-            print(output, flush=True, end="")
+            sys.stdout.write("\r")  # Return to start of line
+            sys.stdout.write(f"\033[{line_count}F")  # Return to start of previous print
+
+            print(output, flush=True, end="")  # Print output
+
+            # Calculate lines printed
             line_count = output.count("\n")
             line_count = line_count if height > line_count else height
 
