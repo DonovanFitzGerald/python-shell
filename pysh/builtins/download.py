@@ -26,6 +26,7 @@ def download_worker() -> None:
     while True:
         item = download_state["queue"].get()
 
+        # Remove thread on kill condition
         if item is None:
             download_state["queue"].task_done()
             with download_state["lock"]:
@@ -38,6 +39,7 @@ def download_worker() -> None:
         with download_state["lock"]:
             download_state["active"].append(url)
 
+        # MARK: URL Processing
         try:
             response = requests.get(url, timeout=15)
             response.raise_for_status()
@@ -67,6 +69,7 @@ def builtin_download(args: list[str]) -> None:
         print("pysh: download: expected a file or --status")
         return
 
+    # MARK: Argument Processing
     if args[0] == "--status":
         if len(args) >= 2 and (args[1] == "--verbose" or "-v"):
             with download_state["lock"]:
@@ -153,16 +156,16 @@ def builtin_download(args: list[str]) -> None:
 
         i += 1
 
+    # Edge Cases
     if text_file_path is None:
         print("pysh: download: missing URL file")
         return
-
     if not os.path.isfile(text_file_path):
         print(f'pysh: download: "{text_file_path}" file not found')
         return
-
     os.makedirs(download_dir, exist_ok=True)
 
+    # Worker Creation
     new_workers = 0
     while len(download_state["threads"]) < num_workers:
         t = threading.Thread(target=download_worker, daemon=True)
@@ -170,6 +173,7 @@ def builtin_download(args: list[str]) -> None:
         t.start()
         new_workers += 1
 
+    # Fill queue with URLs
     queued_now = 0
     with open(text_file_path, "r") as f:
         for line in f:
@@ -180,7 +184,7 @@ def builtin_download(args: list[str]) -> None:
             queued_now += 1
 
     for _ in range(new_workers):
-        download_state["queue"].put(None)
+        download_state["queue"].put(None)  # Add Kill condition to Queue
 
     print(
         f"Queued {queued_now} download(s) with {len(download_state['threads'])} worker(s)."
