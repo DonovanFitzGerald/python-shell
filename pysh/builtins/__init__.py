@@ -3,6 +3,7 @@ from .alias import COMMAND as alias_command
 from .cat import COMMAND as cat_command
 from .cd import COMMAND as cd_command
 from .download import COMMAND as download_command
+from .echo import COMMAND as echo_command
 from .exit import COMMAND as exit_command
 from .head import COMMAND as head_command
 from .help import COMMAND as help_command
@@ -33,6 +34,7 @@ commands_list = [
     wc_command,
     sysinfo_command,
     download_command,
+    echo_command,
     alias_command,
     help_command,
     tail_command,
