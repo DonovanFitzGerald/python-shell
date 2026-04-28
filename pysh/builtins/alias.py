@@ -1,4 +1,4 @@
-from .alias_store import alias_commands_dict
+alias_commands_dict: dict[str, str] = {}
 
 
 def builtin_alias(args: list[str]) -> None:

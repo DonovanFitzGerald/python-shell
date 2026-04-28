@@ -1,5 +1,4 @@
-from .alias_store import alias_commands_dict
-from .alias import COMMAND as alias_command
+from .alias import COMMAND as alias_command, alias_commands_dict
 from .cat import COMMAND as cat_command
 from .cd import COMMAND as cd_command
 from .download import COMMAND as download_command
