@@ -44,7 +44,6 @@ def build_cpu_log():
 
     lines = ["", build_section_header(" CPU "), f"Overall Usage: {cpu_total:>5.1f}%"]
 
-    # Create columns for cores to save vertical space if many cores exist
     core_str = ""
     for i, val in enumerate(cpu_per_core):
         core_str += f"Core {i:>2}: {val:>5.1f}%  | "
@@ -96,7 +95,7 @@ def build_process_log(sort_by):
             f"{proc['pid']:>7}  {proc['ppid']:>7}  {proc['cpu_percent']:>7.1f}  "
             f"{proc['memory_mb']:>10.2f}  {proc['status']:<12.12}  {proc['name']}"
         )
-        lines.append(line[:width])  # Truncate to terminal width
+        lines.append(line[:width])
 
     return lines
 
@@ -104,8 +103,6 @@ def build_process_log(sort_by):
 def builtin_sysinfo(args: list[str]) -> None:
     sort_by = "memory"
     interval = 2.0
-
-    # Argument Parsing
     i = 0
     while i < len(args):
         if args[i] == "--sort" and i + 1 < len(args):
@@ -121,25 +118,17 @@ def builtin_sysinfo(args: list[str]) -> None:
         else:
             i += 1
 
-    # Initial CPU call to seed psutil percentages
     psutil.cpu_percent(interval=None)
 
     try:
         line_count = 0
         print()
         while True:
-            # 1. Build the log content
             all_lines = []
             all_lines.extend(build_memory_log())
             all_lines.extend(build_cpu_log())
             all_lines.extend(build_process_log(sort_by))
 
-            # 2. Clear previous output (ANSI Cursor Up)
-            # if line_count > 0:
-            # \033[F moves cursor to beginning of previous line
-
-            # 3. Print the log
-            # Pad each line with spaces to overwrite previous longer characters
             width = get_terminal_width()
             height = get_terminal_height()
             output = "\n".join([line.ljust(width) for line in all_lines[-height:]])
@@ -150,7 +139,6 @@ def builtin_sysinfo(args: list[str]) -> None:
             line_count = output.count("\n")
             line_count = line_count if height > line_count else height
 
-            # line_count = len(all_lines)
             time.sleep(interval)
 
     except KeyboardInterrupt:
