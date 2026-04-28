@@ -10,6 +10,7 @@ from .procinfo import COMMAND as procinfo_command
 from .pwd import COMMAND as pwd_command
 from .sysinfo import COMMAND as sysinfo_command
 from .wc import COMMAND as wc_command
+from .tail import COMMAND as tail_command
 
 """
 Built-in commands for pysh.
@@ -34,6 +35,7 @@ commands_list = [
     download_command,
     alias_command,
     help_command,
+    tail_command,
 ]
 
 commands_dict = {command["name"]: command for command in commands_list}
