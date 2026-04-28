@@ -164,13 +164,14 @@ def builtin_download(args: list[str]) -> None:
         return
     os.makedirs(download_dir, exist_ok=True)
 
-    # Worker Creation
+    # MARK: Worker Creation
     new_workers = 0
-    while len(download_state["threads"]) < num_workers:
-        t = threading.Thread(target=download_worker, daemon=True)
-        download_state["threads"].append(t)
-        t.start()
-        new_workers += 1
+    with download_state["lock"]:
+        while len(download_state["threads"]) < num_workers:
+            t = threading.Thread(target=download_worker, daemon=True)
+            download_state["threads"].append(t)
+            t.start()
+            new_workers += 1
 
     # Fill queue with URLs
     queued_now = 0
