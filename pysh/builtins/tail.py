@@ -8,7 +8,7 @@ def builtin_tail(args: list[str]) -> None:
     Displays the first _N_ lines of a file
     """
     numLines = 10
-    for [index, string] in reversed(enumerate(args)):
+    for [index, string] in enumerate(reversed(args)):
         if string == "-n":
             index
             args.pop(index)
