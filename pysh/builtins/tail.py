@@ -8,7 +8,7 @@ def builtin_tail(args: list[str]) -> None:
     Displays the first _N_ lines of a file
     """
     numLines = 10
-    for [index, string] in enumerate(reversed(args)):
+    for [index, string] in enumerate(args):
         if string == "-n":
             index
             args.pop(index)
@@ -19,8 +19,9 @@ def builtin_tail(args: list[str]) -> None:
     path = args[0]
     if os.path.isfile(path):
         with open(path, "r") as f:
-            for _ in range(numLines):
-                print(f.readline())
+            lines = f.readlines()[-numLines:]
+            for line in lines:
+                print(line)
     else:
         print(f'pysh: "{path}" file not found')
 
